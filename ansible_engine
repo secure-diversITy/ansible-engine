@@ -1,75 +1,47 @@
 #!/bin/bash
 ########################################################################################
-## @file			ansible_engine.sh
-## @brief			-THE- GUI for using ansible + splunk
-## @author			Thomas Fischer <mail -AT- sedi -DOT- one>
-## @date                        2017-2018
-## @copyright			LGPL v3
-## @details
-##    This program is free software: you can redistribute it and/or modify<br>
-##    it under the terms of the GNU General Public License as published by<br>
-##    the Free Software Foundation, either version 3 of the License, or<br>
-##    (at your option) any later version.<br>
-##    <br>
-##    This program is distributed in the hope that it will be useful,<br>
-##    but WITHOUT ANY WARRANTY; without even the implied warranty of<br>
-##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<br>
-##    GNU General Public License for more details.<br>
-##    <br>
-##    You should have received a copy of the GNU General Public License<br>
-##    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-##
-########################################################################################
 #
-## @mainpage ansible engine (ae)
-## @section intro Overview
-## ansible engine (ae) is a wrapper and GUI (ncurses/dialog based) to execute several tasks with ansible.<br>
-## This is a pure **technical** documentation of ae for those who want to understand how ae works under the hood
-##
-## @section code Code
-## ansible engine is hosted at github:<br>
-## https://github.com/secure-diversITy/ansible_engine
-## 
-## @section secintro User documentation
-## The ansible engine (ae) configuration and installation is described here: <br>
-## https://github.com/secure-diversITy/ansible_engine/wiki
-##<br>
-###############################################################################################################
+# Description:
+# Forget about all the stuff needed to know like: use playbook X to do A and Z to do B
+#
+# Copyright (2017-2018): Thomas Fischer <mail -AT- sedi -DOT- one>
+# Licensed under the LGPL v3:
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+#
+# bashrc setup:
+# -----------------------
+# # call ansible engine
+# F_CALLAE(){
+#        ARGS="$@"
+#        (cd /opt/ansible-playbooks/splunk;./ansible_engine $ARGS)
+# }
+# alias ansible-engine="F_CALLAE $@"
+#
+#
+#################
 VERSION=20180406
 ###############################################################################################################
-#
-# doxygen copy templates:
-#
-# # @var 
-# # @brief 
-# # @showinitializer
-# # @details 
-#
-# # @fn F_NAME()
-# # @brief ..
-# # @param 1 ..
-# # @return ..
-# # @exception ..
-# # @details ..
-##############################################################################################################
 
-
-## @var PYTHONUNBUFFERED
-## @brief avoid buffering when exec python code (ansible)
-## @showinitializer
-## @details when python buffers output ae seems to hang until the 
-## whole playbook has been finished without any feedback. This ensures we see output directly in ae.
+# do not buffer stdout!!
 export PYTHONUNBUFFERED=1
 
-## @var BIN
-## @brief auto generate the binary name without path
-## @showinitializer
-declare BIN=${0##*/}
-
-## @var WORKDIR
-## @brief The working directory where all run files of ae will be stored
-## @showinitializer
-declare WORKDIR=".$(echo ${BIN/.sh}|tr -d _)"
+# engine bin and working directory
+BIN=${0##*/}
+WORKDIR=".$(echo ${BIN/.sh}|tr -d _)"
 [ ! -d "$WORKDIR" ]&& mkdir -p $WORKDIR
 
 # we resist on the bashrc alias so using pwd is fine here
@@ -96,59 +68,20 @@ A2BIN=$A2PATH/bin/ansible-playbook
 
 
 LOG=$WORKDIR/${BIN}.log
-## @var EDITBIN
-## @brief The editor which will be used e.g. when editing system/local files
-## @showinitializer
-declare EDITBIN=/usr/bin/vim
+EDITBIN=/usr/bin/vim	# editor for conf file editing
+PBDIR="$PWD"
 
-## @var PBDIR
-## @brief The directory where all playbooks are expected
-## @showinitializer
-declare PBDIR="$PWD"
-
-## @var PBNEWAPP
-## @brief Adding/Linking new app(s) to ae
-## @showinitializer
-declare PBNEWAPP=add_app.yml
-## @var PBENAPP
-## @brief Adding/Linking new app(s) to ae (the real action)
-## @showinitializer
-declare PBENAPP=enable_app_action.yml
-## @var PBDEPLAPP
-## @brief Deploy apps to given targets
-## @showinitializer
-declare PBDEPLAPP=ae_deploy_apps.yml
-## @var PBDEPLSYSC
-## @brief Deploy system/local configs to given targets 
-## @showinitializer
-declare PBDEPLSYSC=deploy_systemconfigs.yml
-## @var PBGETTARGETS
-## @brief Parsing inventories file and create an expanded host list for each target
-## @showinitializer
-declare PBGETTARGETS=ae_get_targets.yml
-## @var PBUPGRADE
-## @brief Upgrade splunk
-## @showinitializer
-declare PBUPGRADE=upgrade_splunk.yml
-## @var  PBSHINSTALL
-## @brief Install/Upgrade the splunk helper
-## @details https://github.com/secure-diversITy/splunk/tree/master/splunkhelper
-## @showinitializer
-declare PBSHINSTALL=install_shelper.yml
-## @var SHOWAPPS
-## @brief Show app deployment state by target(s) and type (local, git, ...)
-## @showinitializer
-declare SHOWAPPS=show_app_deploymentstate.sh
-## @var PBSHRELOAD
-## @brief Execute splunk helper tasks
-## @details https://github.com/secure-diversITy/splunk/tree/master/splunkhelper
-## @showinitializer
-declare PBSHRELOAD=${ADIR}/maintenance/shelper_reload.yml
-## @var PBSPLACT
-## @brief Maintenance tasks for splunk
-## @details Examples: splunk stop, start, restart
-## @showinitializer
-declare PBSPLACT=${ADIR}/maintenance/splunk_tasks.yml
+# Playbooks
+PBNEWAPP=add_app.yml
+PBENAPP=enable_app_action.yml
+PBDEPLAPP=ae_deploy_apps.yml
+PBDEPLSYSC=deploy_systemconfigs.yml
+PBGETTARGETS=ae_get_targets.yml
+PBUPGRADE=upgrade_splunk.yml
+PBSHINSTALL=install_shelper.yml
+SHOWAPPS=show_app_deploymentstate.sh
+PBSHRELOAD=${ADIR}/maintenance/shelper_reload.yml
+PBSPLACT=${ADIR}/maintenance/splunk_tasks.yml
 
 # default splunk API admin
 DEFSPLAPIADMIN=admin
@@ -163,21 +96,13 @@ GLABSETTINGS=$WORKDIR/gitlab.auth
 # NO CHANGES BEHIND THIS POINT
 #################################################################################################
 
-## @fn F_ENDSESS()
-## @brief Clear ae session
-## @details ae ensures it will not be executed more then 1 time by the EXECBIT var
+# clear the running bit
 F_ENDSESS(){
 	echo "$FUNCNAME started" >> $LOG
 	rm -vf $EXECBIT >> $LOG
 	echo "$FUNCNAME finished" >> $LOG
 }
 
-## @fn F_EXIT()
-## @brief The regular exit
-## @param 1 when set to 'NOSESSEXIT' no session exit will happen (rare)
-## @return 0
-## @details If just executed without param ae will not clear the session
-## but when a full abort is required use param 1 accordingly
 F_EXIT(){
 	echo "$FUNCNAME started" >> $LOG
 	
@@ -393,6 +318,7 @@ F_TARGETS(){
 	# 8. get only these lines containing a comma and something behind (means section has a value)
 	#    this is needed as a section can be empty which shouldnt be shown if!
 	OPTIONS=($(for i in $(egrep -v "(:vars|:children)" "$HOSTFILE" | egrep --group-separator="/" -A1 "^\[.*\]"| tr "[" "\n" |sed -e 's/\]$/,/g;s/^$/\//g'| tr -d "\n" | sed 's#//#/#g' | tr "/" "\n" | egrep ",\w+" | cut -d "," -f1);do echo $i $i off; done))
+	# OPTIONS EXPLANATION ABOVE
 
 	if [ -z "$1" ];then 
 		echo -e "\n\nERROR! Missing F_TARGETS arg!! Cannot continue...\n" && F_EXIT
@@ -1490,15 +1416,13 @@ F_UPGRADESPLC(){ F_LOG $FUNCNAME started
 	F_LOG $FUNCNAME ended
 }
 
-# upgrading splunk
-F_UPGRADESPL(){
-	# Prepare new version?
-	# -> Setup the configs
-	# -> Show the current staged version
-	# Ask for hostfile
-	# Ask for hosts OR/AND target groups?
-	# Use upgrade playbook
-        echo "$FUNCNAME started" >> $LOG
+# select host(s)
+F_SELHOST(){
+	# parses the inventory
+	# offer all groups found
+	# parse groups including childs
+	# offer all hosts found
+        F_LOG $FUNCNAME started
         unset HOSTSELEXPANDED ABORTED HOSTSELECT HOSTFILE tgroup
         F_HOSTFILE
         while [ -z "$HOSTSELECT" ];do
@@ -1517,13 +1441,9 @@ F_UPGRADESPL(){
         done
 	[ $ABORTED -eq 1 ] && F_ABORTMAINMENU
 
-	CREDS=$(F_GETAPICREDS)
-	SPLUSR="${CREDS/:*}"
-	SPLPW="${CREDS/*:}"
-
 	# ask for specific hosts or target group?
 	unset HOSTLIST['expanded']
-	F_DIALOG --begin 3 3 --infobox "\nPlease standby until all hostnames from your target groups are generated" 5 80
+	F_DIALOG --begin 3 3 --infobox "\nPlease standby until all hostnames from your target groups are generated" 5 80 2>&1 > /dev/tty
 	for hostlist in $HOSTSELECTION;do
 		if [ -z "${HOSTLIST['expanded']}" ];then
 			HOSTLIST['expanded']+="$(F_EXPANDHOSTS $hostlist | grep -v EMPTY)"
@@ -1543,8 +1463,69 @@ F_UPGRADESPL(){
 
 	# make host list unique to avoid duplicated upgrades when a host is in multiple groups
 	# number each entry,sort by name and remove dups, sort by num
-	UPGRADEHOSTS=$(echo "$EDITHOST" | tr ' ' '\n' | nl| sort -u -k2|sort -n| cut -f2-|tr '\n' ' ')
-	UPGRADEHOSTST="$(echo "$UPGRADEHOSTS" | sed 's/ /\\n/g')"
+	# UPGRADEHOSTS=$(echo "$EDITHOST" | tr ' ' '\n' | nl| sort -u -k2|sort -n| cut -f2-|tr '\n' ' ')
+	echo "$EDITHOST" | tr ' ' '\n' | nl| sort -u -k2|sort -n| cut -f2-|tr '\n' ' '
+}
+
+# install splunk
+F_INSTALLSPL(){
+        F_LOG $FUNCNAME started
+	# this installs pure splunk without configuration
+	
+        SHOSTS="$(F_SELHOST)"
+        SHOSTST="$(echo "$SHOSTS" | sed 's/ /\n/g')"
+
+        if  [ -z "$SHOSTS" ] || [ -z $SHOSTST ];then
+                F_LOG $FUNCNAME "SHOSTS ($SHOSTS) or SHOSTST ($SHOSTST) empty"
+                F_ERRLOG "3" "INTERNAL ERROR OCCURED in $FUNCNAME" "$LOG"
+        else
+                F_LOG $FUNCNAME "SHOSTS and SHOSTST are both set"
+        fi
+	
+	F_LOG "$FUNCNAME" "Will install splunk on <$UPGRADEHOSTS>"
+	F_DIALOG --scrollbar --yesno "Will install Splunk on these hosts:\n\n$SHOSTST\n\nAre you sure?" 30 100
+	[ $? -ne 0 ] && F_ABORTMAINMENU
+
+	# create a temporary ansible group (must be in the correct env path! otherwise varibles cant be found)
+	ITMPGRP=${AINVENTORY}/${TARGETENV}/${FUNCNAME}_hosts
+	echo '[tmpgrp]' > $ITMPGRP
+	for h in $SHOSTS;do echo "$h" >> $ITMPGRP; done
+	if [ $? -ne 0 ];then F_ERRLOG "3" "INTERNAL ERROR OCCURED in $FUNCNAME" "$LOG"; F_ABORTMAINMENU;fi
+
+	F_LOG "$FUNCNAME" "Temporary generated group: $(cat $ITMPGRP)"
+
+ 	F_LOG $FUNCNAME "F_A2BIN $ITMPGRP $PBINSTALL '--limit tmpgrp" | tee -a $LOG
+
+	# doit
+	F_A2BIN "$ITMPGRP" "$PBINSTALL" "\Za\Z1INSTALLING ...\Z\n" "--limit tmpgrp" 
+        F_ERRLOG "${PIPESTATUS[0]}" "Installing splunk on:\n\n$SHOSTST" "$LOG"
+
+        F_LOG $FUNCNAME ended
+}
+
+# Upgrade splunk
+F_UPGRADESPL(){
+        F_LOG $FUNCNAME started
+	# Prepare new version?
+	# -> Setup the configs
+	# -> Show the current staged version
+	# Ask for hostfile
+	# Ask for hosts OR/AND target groups?
+	# Use upgrade playbook
+ 
+	UPGRADEHOSTS="$(F_SELHOST)"
+	UPGRADEHOSTST="$(echo "$UPGRADEHOSTS" | sed 's/ /\n/g')"
+
+	if  [ -z "$UPGRADEHOSTS" ] || [ -z $UPGRADEHOSTST ];then
+		F_LOG $FUNCNAME "UPGRADEHOSTS ($UPGRADEHOSTS) or UPGRADEHOSTSST ($UPGRADEHOSTST) empty"
+		F_ERRLOG "3" "INTERNAL ERROR OCCURED in $FUNCNAME" "$LOG"
+	else
+		F_LOG $FUNCNAME "UPGRADEHOSTS and UPGRADEHOSTST are both set"
+	fi
+
+	CREDS=$(F_GETAPICREDS)
+	SPLUSR="${CREDS/:*}"
+	SPLPW="${CREDS/*:}"
 
 	F_LOG "$FUNCNAME" "Will upgrade <$UPGRADEHOSTS>"
 	F_DIALOG --scrollbar --yesno "Will upgrade Splunk on these hosts:\n\n$UPGRADEHOSTST\n\nAre you sure?" 30 100
@@ -1554,14 +1535,8 @@ F_UPGRADESPL(){
 	UTMPGRP=${AINVENTORY}/${TARGETENV}/upgrhosts
 	echo '[tmpupgrade]' > $UTMPGRP
 	for h in $UPGRADEHOSTS;do echo "$h" >> $UTMPGRP; done
-	F_LOG "$FUNCNAME" "Temporary upgrade group: $(cat $UTMPGRP)"
+	if [ $? -ne 0 ];then F_ERRLOG "3" "INTERNAL ERROR OCCURED in $FUNCNAME" "$LOG"; F_ABORTMAINMENU;fi
 
-	[ $? -ne 0 ] && F_ABORTMAINMENU
-
-	# create a temporary ansible group (must be in the correct env path! otherwise varibles cant be found)
-	UTMPGRP=${AINVENTORY}/${TARGETENV}/upgrhosts
-	echo '[tmpupgrade]' > $UTMPGRP
-	for h in $UPGRADEHOSTS;do echo "$h" >> $UTMPGRP; done
 	F_LOG "$FUNCNAME" "Temporary upgrade group: $(cat $UTMPGRP)"
 
  	F_LOG $FUNCNAME "F_A2BIN $UTMPGRP $PBUPGRADE '--limit tmpupgrade -e \"splunk_user=$SPLUSR splunk_password=$SPLPW\"" | tee -a $LOG
@@ -1569,6 +1544,8 @@ F_UPGRADESPL(){
 	# upgrade
 	F_A2BIN "$UTMPGRP" "$PBUPGRADE" "\Za\Z1UPGRADING ...\Z\n" "--limit tmpupgrade -e {'splunk_user':'$SPLUSR','splunk_password':'$SPLPW'}" 
         F_ERRLOG "${PIPESTATUS[0]}" "Upgrade for:\n\n$UPGRADEHOSTST" "$LOG"
+
+        F_LOG $FUNCNAME ended
 }
 
 # Deploy Apps to specified targets
