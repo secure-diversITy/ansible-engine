@@ -1,7 +1,0 @@
----
-- name: Stop Splunk
-  become: yes
-  become_user: root
-  service: name=splunk
-           pattern=splunkd
-           state=stopped

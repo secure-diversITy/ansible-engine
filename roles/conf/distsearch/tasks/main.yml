@@ -1,5 +1,0 @@
----
-- include: touch.yml
-- include: distributedSearch/disabled.yml
-- include: distributedSearch/server.yml
-

@@ -1,5 +1,0 @@
----
-- include: prereq.yml
-  when: shelper_installation.enabled == true
-- include: git_checkout.yml
-  when: shelper_installation.enabled == true and shelper_installation.install_shelper_git == true

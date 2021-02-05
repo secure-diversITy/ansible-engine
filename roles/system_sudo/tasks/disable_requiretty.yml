@@ -1,7 +1,0 @@
-- lineinfile:
-    path: /etc/sudoers
-    state: present
-    backup: true
-    regexp: '^Defaults\s*requiretty'
-    line: '## DISABLED FOR ANSIBLE ## Defaults  requiretty'
-    validate: '/usr/sbin/visudo -cf %s'

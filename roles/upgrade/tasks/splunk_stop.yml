@@ -1,6 +1,0 @@
----
-
-- name: Stop Splunk
-  service: name=splunk
-           pattern=splunkd
-           state=stopped

@@ -1,6 +1,0 @@
----
-
-- name: shelper reload
-  shell: echo
-  notify: shelper reload all
-
